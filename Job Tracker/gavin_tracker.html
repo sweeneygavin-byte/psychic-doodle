@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Gavin's Job Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #0f0f11;
+  --bg2: #17171a;
+  --bg3: #1e1e23;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #f0f0f0;
+  --text2: #9a9aaa;
+  --text3: #5a5a6a;
+  --green: #2ecc8a;
+  --green-bg: rgba(46,204,138,0.1);
+  --blue: #4f9cf9;
+  --blue-bg: rgba(79,156,249,0.1);
+  --amber: #f0a030;
+  --amber-bg: rgba(240,160,48,0.1);
+  --purple: #9b7ff4;
+  --purple-bg: rgba(155,127,244,0.1);
+  --coral: #f47560;
+  --coral-bg: rgba(244,117,96,0.1);
+  --teal: #2dd4bf;
+  --teal-bg: rgba(45,212,191,0.1);
+  --pink: #f472b6;
+  --pink-bg: rgba(244,114,182,0.1);
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* LAYOUT */
+.app { display: flex; height: 100vh; overflow: hidden; }
+
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 0;
+}
+
+.logo {
+  padding: 0 20px 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.logo-name { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
+.logo-role { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; margin-top: 2px; }
+
+.nav-label { font-size: 10px; font-weight: 500; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; padding: 0 20px; margin: 16px 0 6px; }
+
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 20px; cursor: pointer;
+  color: var(--text2); font-size: 13px; font-weight: 400;
+  transition: all 0.15s; border-left: 2px solid transparent;
+}
+.nav-item:hover { color: var(--text); background: var(--bg3); }
+.nav-item.active { color: var(--text); background: var(--bg3); border-left-color: var(--blue); }
+.nav-icon { width: 16px; height: 16px; opacity: 0.6; }
+.nav-item.active .nav-icon { opacity: 1; }
+.nav-badge { margin-left: auto; font-size: 10px; font-family: 'DM Mono', monospace; background: var(--bg3); color: var(--text3); padding: 1px 6px; border-radius: 20px; }
+.nav-item.active .nav-badge { background: var(--blue-bg); color: var(--blue); }
+
+.sidebar-footer {
+  margin-top: auto; padding: 16px 20px 0;
+  border-top: 1px solid var(--border);
+}
+.sidebar-footer p { font-size: 11px; color: var(--text3); line-height: 1.6; }
+
+/* MAIN */
+.main { flex: 1; overflow-y: auto; background: var(--bg); }
+
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(15,15,17,0.9); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 32px; display: flex; align-items: center; gap: 12px;
+}
+.topbar h2 { font-size: 18px; font-weight: 500; flex: 1; letter-spacing: -0.3px; }
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+input[type=text], select {
+  background: var(--bg2); border: 1px solid var(--border2);
+  color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px;
+  padding: 7px 12px; border-radius: var(--radius-sm); outline: none;
+}
+input[type=text]:focus, select:focus { border-color: var(--blue); }
+select option { background: var(--bg2); }
+
+.page { padding: 28px 32px; display: none; }
+.page.active { display: block; }
+
+/* STAT CARDS */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+.stat {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 18px;
+}
+.stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.stat-val { font-size: 26px; font-weight: 500; font-family: 'DM Mono', monospace; }
+
+/* SECTION HEADERS */
+.sec-head {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 500; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.8px;
+  margin: 24px 0 12px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.sec-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.sec-count { margin-left: auto; font-family: 'DM Mono', monospace; }
+
+/* FIRM CARDS */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; margin-bottom: 8px; }
+
+.card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  transition: border-color 0.15s, transform 0.1s;
+  position: relative;
+}
+.card:hover { border-color: var(--border2); transform: translateY(-1px); }
+.card.watching { border-left: 2px solid var(--green); }
+.card.applied { border-left: 2px solid var(--blue); }
+.card.contacted { border-left: 2px solid var(--amber); }
+.card.dialogue { border-left: 2px solid var(--green); }
+
+.card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.card-name { font-size: 14px; font-weight: 500; color: var(--text); }
+.card-sub { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; margin-bottom: 8px; }
+.card-why { font-size: 12px; color: var(--text2); line-height: 1.55; margin-bottom: 10px; }
+.card-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* BUTTONS */
+.btn {
+  font-size: 11px; padding: 5px 10px;
+  border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  background: transparent; color: var(--text2);
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  text-decoration: none; display: inline-block;
+  transition: all 0.15s;
+}
+.btn:hover { background: var(--bg3); color: var(--text); border-color: var(--border2); }
+.btn-primary { background: var(--blue-bg); color: var(--blue); border-color: rgba(79,156,249,0.25); }
+.btn-primary:hover { background: rgba(79,156,249,0.2); }
+.btn-green { background: var(--green-bg); color: var(--green); border-color: rgba(46,204,138,0.25); }
+.btn-amber { background: var(--amber-bg); color: var(--amber); border-color: rgba(240,160,48,0.25); }
+
+/* TAGS */
+.tag { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 500; white-space: nowrap; }
+.tag-hf { background: var(--purple-bg); color: var(--purple); }
+.tag-am { background: var(--teal-bg); color: var(--teal); }
+.tag-bk { background: var(--blue-bg); color: var(--blue); }
+.tag-ft { background: var(--amber-bg); color: var(--amber); }
+.tag-t1 { background: var(--green-bg); color: var(--green); }
+.tag-t2 { background: var(--amber-bg); color: var(--amber); }
+
+/* STATUS PILL */
+.status-pill { font-size: 10px; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; }
+.sdot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+/* SCANNER */
+.scanner-box {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
+}
+.scanner-box h3 { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+.scanner-box p { font-size: 12px; color: var(--text2); margin-bottom: 14px; line-height: 1.6; }
+.scan-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 8px; }
+.scan-item {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px;
+}
+.scan-title { font-size: 12px; font-weight: 500; margin-bottom: 3px; }
+.scan-desc { font-size: 11px; color: var(--text3); margin-bottom: 8px; line-height: 1.4; }
+.scan-result { font-size: 12px; color: var(--text2); margin-top: 8px; line-height: 1.6; white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
+.last-scan { font-size: 10px; color: var(--text3); margin-top: 4px; font-family: 'DM Mono', monospace; }
+
+/* AI RESULT */
+.ai-result-area {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px; margin-top: 8px;
+  font-size: 12px; color: var(--text2); line-height: 1.6;
+  white-space: pre-wrap; max-height: 300px; overflow-y: auto;
+  display: none;
+}
+.ai-result-area.visible { display: block; }
+
+/* SPINNER */
+.spinner {
+  display: inline-block; width: 11px; height: 11px;
+  border: 1.5px solid var(--border2); border-top-color: var(--blue);
+  border-radius: 50%; animation: spin 0.7s linear infinite;
+  vertical-align: middle; margin-right: 5px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* OPPORTUNITY TRACKER */
+.pipeline { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.pipeline-col { }
+.pipeline-head {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 12px; font-weight: 500; color: var(--text2);
+  margin-bottom: 10px;
+}
+.p-cnt { font-size: 11px; font-family: 'DM Mono', monospace; background: var(--bg3); color: var(--text3); padding: 1px 7px; border-radius: 20px; }
+.opp-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 13px 14px; margin-bottom: 8px;
+  cursor: pointer; transition: border-color 0.15s;
+}
+.opp-card:hover { border-color: var(--border2); }
+.opp-card.saved { border-left: 2px solid var(--green); }
+.opp-card.applied { border-left: 2px solid var(--blue); }
+.opp-card.interviewing { border-left: 2px solid var(--amber); }
+.opp-title { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+.opp-co { font-size: 11px; color: var(--text2); margin-bottom: 6px; }
+.opp-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px; }
+.opp-bot { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+.opp-salary { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--text2); }
+.match-pill { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+.match-h { background: var(--green-bg); color: var(--green); }
+.match-m { background: var(--amber-bg); color: var(--amber); }
+.match-l { background: var(--coral-bg); color: var(--coral); }
+.score-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+.score-bar-bg { flex: 1; height: 3px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.score-bar-fill { height: 3px; border-radius: 3px; }
+.score-num { font-size: 10px; font-family: 'DM Mono', monospace; min-width: 28px; text-align: right; }
+.add-col-btn {
+  width: 100%; font-size: 12px; padding: 8px;
+  border: 1px dashed var(--border2); border-radius: var(--radius-sm);
+  background: transparent; color: var(--text3); cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+.add-col-btn:hover { background: var(--bg3); color: var(--text2); }
+
+/* NOTES */
+.notes-panel { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px; display: none; }
+.notes-panel.open { display: block; }
+textarea {
+  width: 100%; font-family: 'DM Sans', sans-serif; font-size: 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text); border-radius: var(--radius-sm); padding: 8px;
+  resize: vertical; min-height: 60px; outline: none;
+}
+textarea:focus { border-color: var(--blue); }
+.step-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); padding: 3px 0; }
+.step-item.done { text-decoration: line-through; color: var(--text3); }
+.step-item input[type=checkbox] { accent-color: var(--green); }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+/* EMPTY */
+.empty { font-size: 13px; color: var(--text3); padding: 12px 0; }
+
+/* FILTER ROW */
+.filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
+.filter-row span { font-size: 12px; color: var(--text3); }
+.fb {
+  font-size: 12px; padding: 5px 12px;
+  border: 1px solid var(--border); border-radius: 20px;
+  background: transparent; color: var(--text2); cursor: pointer;
+  font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+}
+.fb:hover { background: var(--bg3); color: var(--text); }
+.fb.active { background: var(--blue-bg); color: var(--blue); border-color: rgba(79,156,249,0.3); }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.page.active { animation: fadeIn 0.2s ease; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-name">Gavin Sweeney</div>
+    <div class="logo-role">MD / COO · BlackRock</div>
+  </div>
+  <div class="nav-label">Tracker</div>
+  <div class="nav-item active" onclick="showPage('opportunities',this)">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="14" height="10" rx="1.5"/><path d="M5 7h6M5 10h4"/></svg>
+    Opportunities <span class="nav-badge" id="nb-opp">8</span>
+  </div>
+  <div class="nav-item" onclick="showPage('firms',this)">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14V6l6-4 6 4v8"/><path d="M6 14v-4h4v4"/></svg>
+    Target firms <span class="nav-badge" id="nb-firms">30</span>
+  </div>
+  <div class="nav-item" onclick="showPage('headhunters',this)">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+    Headhunters <span class="nav-badge">8</span>
+  </div>
+  <div class="nav-label">Sources</div>
+  <div class="nav-item" onclick="showPage('scanner',this)">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4"/><path d="M10 10l3 3"/></svg>
+    Job scanner
+  </div>
+  <div class="sidebar-footer">
+    <p>Double-click to open · Save to GitHub for persistence</p>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- OPPORTUNITIES PAGE -->
+<div class="page active" id="page-opportunities">
+  <div class="topbar">
+    <h2>Opportunities</h2>
+    <div class="topbar-actions">
+      <input type="text" placeholder="Search..." style="width:140px" oninput="filterOpps(this.value)" id="opp-search"/>
+      <select onchange="filterOppType(this.value)">
+        <option value="all">All firm types</option>
+        <option value="hf">Hedge fund</option>
+        <option value="am">Asset manager</option>
+        <option value="bk">Bank</option>
+        <option value="ft">Fintech</option>
+        <option value="startup">Startup</option>
+      </select>
+    </div>
+  </div>
+  <div style="padding:28px 32px">
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Tracking</div><div class="stat-val" id="os-total">8</div></div>
+      <div class="stat"><div class="stat-label">Avg AI score</div><div class="stat-val" id="os-score" style="color:var(--green)">—</div></div>
+      <div class="stat"><div class="stat-label">Applied</div><div class="stat-val" id="os-applied" style="color:var(--blue)">3</div></div>
+      <div class="stat"><div class="stat-label">Interviewing</div><div class="stat-val" id="os-int" style="color:var(--amber)">2</div></div>
+    </div>
+    <div class="pipeline">
+      <div class="pipeline-col">
+        <div class="pipeline-head"><span style="display:flex;align-items:center;gap:6px"><span class="sdot" style="background:var(--green)"></span>Saved</span><span class="p-cnt" id="pc-saved">0</span></div>
+        <div id="col-saved"></div>
+        <button class="add-col-btn" onclick="addOppPrompt()">+ Add opportunity</button>
+      </div>
+      <div class="pipeline-col">
+        <div class="pipeline-head"><span style="display:flex;align-items:center;gap:6px"><span class="sdot" style="background:var(--blue)"></span>Applied</span><span class="p-cnt" id="pc-applied">0</span></div>
+        <div id="col-applied"></div>
+        <button class="add-col-btn" onclick="alert('Log an application by moving a saved role to Applied status.')">+ Log application</button>
+      </div>
+      <div class="pipeline-col">
+        <div class="pipeline-head"><span style="display:flex;align-items:center;gap:6px"><span class="sdot" style="background:var(--amber)"></span>Interviewing</span><span class="p-cnt" id="pc-int">0</span></div>
+        <div id="col-int"></div>
+        <button class="add-col-btn" onclick="alert('Track an interview by moving an applied role to Interviewing.')">+ Add interview</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FIRMS PAGE -->
+<div class="page" id="page-firms">
+  <div class="topbar">
+    <h2>Target firms</h2>
+    <div class="topbar-actions">
+      <input type="text" placeholder="Search firms..." style="width:140px" oninput="filterFirms(this.value)"/>
+      <select onchange="filterFirmCat(this.value)">
+        <option value="all">All categories</option>
+        <option value="hs">Systematic HF</option>
+        <option value="hm">Multi-strat HF</option>
+        <option value="am">Asset managers</option>
+        <option value="bk">Banks</option>
+        <option value="ft">Fintech</option>
+      </select>
+    </div>
+  </div>
+  <div style="padding:28px 32px">
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Firms</div><div class="stat-val" id="fs-n">30</div></div>
+      <div class="stat"><div class="stat-label">Watching</div><div class="stat-val" id="fs-w" style="color:var(--green)">0</div></div>
+      <div class="stat"><div class="stat-label">Applied</div><div class="stat-val" id="fs-a" style="color:var(--blue)">0</div></div>
+      <div class="stat"><div class="stat-label">Categories</div><div class="stat-val">5</div></div>
+    </div>
+    <div id="firm-list"></div>
+  </div>
+</div>
+
+<!-- HEADHUNTERS PAGE -->
+<div class="page" id="page-headhunters">
+  <div class="topbar"><h2>Executive search firms</h2></div>
+  <div style="padding:28px 32px">
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Search firms</div><div class="stat-val">8</div></div>
+      <div class="stat"><div class="stat-label">Contacted</div><div class="stat-val" id="hs-c" style="color:var(--amber)">0</div></div>
+      <div class="stat"><div class="stat-label">In dialogue</div><div class="stat-val" id="hs-d" style="color:var(--green)">0</div></div>
+      <div class="stat"><div class="stat-label">Tier 1</div><div class="stat-val">4</div></div>
+    </div>
+    <div class="sec-head"><span class="sec-dot" style="background:var(--green)"></span>Tier 1 — most active in senior finance &amp; trading</div>
+    <div class="grid" id="hh-t1"></div>
+    <div class="sec-head" style="margin-top:24px"><span class="sec-dot" style="background:var(--amber)"></span>Tier 2 — fintech, alternatives &amp; asset management specialists</div>
+    <div class="grid" id="hh-t2"></div>
+  </div>
+</div>
+
+<!-- SCANNER PAGE -->
+<div class="page" id="page-scanner">
+  <div class="topbar"><h2>Job scanner</h2></div>
+  <div style="padding:28px 32px">
+
+    <div class="scanner-box">
+      <h3>LinkedIn deep search</h3>
+      <p>Pre-built searches filtered to your seniority. Opens LinkedIn — log in first for full results.</p>
+      <div class="scan-grid">
+        <div class="scan-item"><div class="scan-title">COO — hedge funds</div><div class="scan-desc">Director+ COO roles at funds, New York</div><a class="btn" href="https://www.linkedin.com/jobs/search/?keywords=COO+%22Chief+Operating+Officer%22+%22hedge+fund%22&location=New+York&f_E=6&sortBy=DD" target="_blank">Open search ↗</a></div>
+        <div class="scan-item"><div class="scan-title">Head of Trading — buy side</div><div class="scan-desc">Director+ head of trading at funds &amp; managers</div><a class="btn" href="https://www.linkedin.com/jobs/search/?keywords=%22Head+of+Trading%22+OR+%22Chief+Trading+Officer%22&location=New+York&f_E=6&sortBy=DD" target="_blank">Open search ↗</a></div>
+        <div class="scan-item"><div class="scan-title">Market structure — banks</div><div class="scan-desc">MD-level market structure &amp; e-trading at banks</div><a class="btn" href="https://www.linkedin.com/jobs/search/?keywords=%22Market+Structure%22+%22Managing+Director%22&location=New+York&f_E=6&sortBy=DD" target="_blank">Open search ↗</a></div>
+        <div class="scan-item"><div class="scan-title">Systematic execution</div><div class="scan-desc">Systematic &amp; algo execution leadership roles</div><a class="btn" href="https://www.linkedin.com/jobs/search/?keywords=%22Systematic+Execution%22+OR+%22Algorithmic+Trading%22+%22Managing+Director%22&location=New+York&sortBy=DD" target="_blank">Open search ↗</a></div>
+        <div class="scan-item"><div class="scan-title">Fintech COO / President</div><div class="scan-desc">C-suite at fintech &amp; trading technology firms</div><a class="btn" href="https://www.linkedin.com/jobs/search/?keywords=COO+OR+President+fintech+trading&location=New+York&f_E=6&sortBy=DD" target="_blank">Open search ↗</a></div>
+        <div class="scan-item"><div class="scan-title">Remote — senior finance</div><div class="scan-desc">Remote-friendly executive finance roles</div><a class="btn" href="https://www.linkedin.com/jobs/search/?keywords=COO+OR+%22Head+of+Trading%22&f_WT=2&f_E=6&sortBy=DD" target="_blank">Open search ↗</a></div>
+      </div>
+    </div>
+
+    <div class="scanner-box">
+      <h3>Job board scanner</h3>
+      <p>Open any board directly, or use the AI scan to search for matching roles via the Anthropic API. Paste your API key below to enable AI scans.</p>
+      <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center">
+        <input type="password" id="api-key" placeholder="sk-ant-... (Anthropic API key for AI scans)" style="flex:1;font-family:'DM Mono',monospace;font-size:12px"/>
+        <button class="btn btn-primary" onclick="saveKey()">Save key</button>
+        <span id="key-status" style="font-size:11px;color:var(--text3)"></span>
+      </div>
+      <div class="scan-grid">
+        <div class="scan-item"><div class="scan-title">eFinancialCareers</div><div class="scan-desc">Most relevant board at your seniority</div><div style="display:flex;gap:5px;flex-wrap:wrap"><a class="btn" href="https://www.efinancialcareers.com/jobs/chief-operating-officer" target="_blank">Browse ↗</a><button class="btn btn-primary" onclick="runScan('efc')">AI scan</button></div><div class="scan-result" id="sr-efc"></div><div class="last-scan" id="ls-efc"></div></div>
+        <div class="scan-item"><div class="scan-title">Indeed</div><div class="scan-desc">Broad coverage for emerging roles</div><div style="display:flex;gap:5px;flex-wrap:wrap"><a class="btn" href="https://www.indeed.com/jobs?q=COO+trading+finance&l=New+York&sort=date" target="_blank">Browse ↗</a><button class="btn btn-primary" onclick="runScan('indeed')">AI scan</button></div><div class="scan-result" id="sr-indeed"></div><div class="last-scan" id="ls-indeed"></div></div>
+        <div class="scan-item"><div class="scan-title">Glassdoor</div><div class="scan-desc">Jobs plus company intel</div><div style="display:flex;gap:5px;flex-wrap:wrap"><a class="btn" href="https://www.glassdoor.com/Job/new-york-coo-finance-jobs-SRCH_IL.0,8_IC1132348_KO9,20.htm" target="_blank">Browse ↗</a><button class="btn btn-primary" onclick="runScan('glassdoor')">AI scan</button></div><div class="scan-result" id="sr-glassdoor"></div><div class="last-scan" id="ls-glassdoor"></div></div>
+        <div class="scan-item"><div class="scan-title">Hacker News Jobs</div><div class="scan-desc">Best for fintech &amp; startup exec roles</div><div style="display:flex;gap:5px;flex-wrap:wrap"><a class="btn" href="https://news.ycombinator.com/jobs" target="_blank">Browse ↗</a><button class="btn btn-primary" onclick="runScan('hn')">AI scan</button></div><div class="scan-result" id="sr-hn"></div><div class="last-scan" id="ls-hn"></div></div>
+        <div class="scan-item"><div class="scan-title">Wellfound / AngelList</div><div class="scan-desc">Startup exec roles with equity</div><div style="display:flex;gap:5px;flex-wrap:wrap"><a class="btn" href="https://wellfound.com/jobs?role=operations" target="_blank">Browse ↗</a><button class="btn btn-primary" onclick="runScan('angel')">AI scan</button></div><div class="scan-result" id="sr-angel"></div><div class="last-scan" id="ls-angel"></div></div>
+        <div class="scan-item"><div class="scan-title">Scan all sources</div><div class="scan-desc">AI search across all boards at once</div><button class="btn btn-primary" onclick="runScan('all')" style="width:100%">Run full scan</button><div class="scan-result" id="sr-all"></div><div class="last-scan" id="ls-all"></div></div>
+      </div>
+    </div>
+
+    <div class="scanner-box">
+      <h3>Scheduled scanning — GitHub setup</h3>
+      <p>Save this file to your GitHub repo and add a Python script with GitHub Actions to run daily scans of job boards and your 30 target firms' careers pages, emailing you a summary of new matching roles each morning.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="openClaude('Write me a complete Python script that scans eFinancialCareers, Indeed and LinkedIn public listings, plus the careers pages of 30 target firms including Citadel, Point72, Millennium, Two Sigma, D.E. Shaw, Balyasny, Marshall Wace, Capula, AQR, JPMorgan, Goldman Sachs, Morgan Stanley, Citi, UBS, Barclays, MarketAxess, Tradeweb and Virtu Financial, for COO Head of Trading and MD Market Structure roles daily. Email a summary of new listings. Include full GitHub Actions setup.')">Generate Python script</button>
+        <button class="btn" onclick="openClaude('How do I set up GitHub Actions to run a Python job scanning script on a daily schedule and send email alerts for new senior finance roles matching my profile?')">GitHub Actions guide</button>
+        <button class="btn" onclick="openClaude('Can we package my job tracker HTML file as a desktop app using Electron so I can run it without opening a browser? Walk me through the steps.')">Make it a desktop app</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+
+const RESUME = `Gavin Sweeney — MD & COO Global Trading, BlackRock (2006–present). Led 220-person global trading team across Fixed Income, Equity, FX, Commodities, Crypto and e-Trading across 11 regional offices. Head of Systematic Execution designing electronic/automated workflows for Rates, Credit and EM. Director Securities Finance Strategy 2014–2017. Director International Equity Securities Lending 2009–2014. VP US Equity Securities Lending 2006–2009. CME Eurodollar Futures Trader 2004–2006. BEng Mechanical Engineering Trinity College Dublin. CAIA 2012.`;
+
+const CAT_META = {
+  hs: { l: "Systematic / quant hedge funds", c: "var(--purple)" },
+  hm: { l: "Multi-strategy hedge funds",     c: "var(--blue)" },
+  am: { l: "Large asset managers",           c: "var(--teal)" },
+  bk: { l: "Investment banks",               c: "var(--amber)" },
+  ft: { l: "Fintech / trading technology",   c: "var(--coral)" },
+};
+const CAT_ORDER = ["hs","hm","am","bk","ft"];
+const TAG_LABELS = { hf:"Hedge fund", am:"Asset manager", bk:"Bank", ft:"Fintech" };
+
+const SCAN_QUERIES = {
+  efc:     "Search eFinancialCareers for current COO, Head of Trading, MD Market Structure roles in NYC for a BlackRock MD with 20 years global trading ops and systematic execution. List the top 3–4 most relevant with company, role and how to apply.",
+  indeed:  "Search Indeed for senior executive COO or Head of Trading finance roles in New York matching a BlackRock MD background in global trading and systematic execution. List top 3–4 with company and role.",
+  glassdoor:"Search Glassdoor for C-suite or MD-level trading operations roles at hedge funds, asset managers or banks in New York. List top 3–4 for a BlackRock COO with systematic execution background.",
+  hn:      "Search Hacker News Who's Hiring for fintech or trading technology executive roles (COO, President, Head of Trading) for a BlackRock MD with systematic execution and market structure background. List top 3.",
+  angel:   "Search Wellfound and AngelList for fintech or systematic trading startup COO roles in New York or remote for a BlackRock MD with 20 years global trading ops. List top 3.",
+  all:     "Comprehensive search across eFinancialCareers, Indeed, LinkedIn public listings, Glassdoor and company careers pages for the top 5 current openings for a BlackRock MD COO with 20 years global trading, systematic execution and market structure experience. NYC or remote. For each: company, role, salary if available, and where to apply."
+};
+
+const firms = [
+  {id:1, n:"Two Sigma",                  c:"hs", t:"hf", a:"$60B+",  w:"Pure systematic/ML-driven. Your e-trading and systematic execution maps directly to their trading ops needs.",              url:"https://www.twosigma.com/careers/",                    s:"none"},
+  {id:2, n:"D.E. Shaw",                  c:"hs", t:"hf", a:"$60B+",  w:"Quant multi-strat with deep FI and systematic execution. Strong fit for your rates and EM systematic work.",               url:"https://www.deshaw.com/careers",                       s:"none"},
+  {id:3, n:"Renaissance Technologies",   c:"hs", t:"hf", a:"$130B+", w:"Gold standard in systematic trading. Long Island-based, operationally very relevant to your profile.",                   url:"https://www.rentec.com/Careers.action",                s:"none"},
+  {id:4, n:"AQR Capital",                c:"hs", t:"hf", a:"$100B+", w:"Factor-based systematic strategies across asset classes. Your global multi-asset trading ops is a strong match.",         url:"https://www.aqr.com/About-Us/Careers",                 s:"none"},
+  {id:5, n:"WorldQuant",                 c:"hs", t:"hf", a:"$10B+",  w:"Quantitative, global, systematic. NYC-based and growing. Good fit for systematic execution leadership.",                  url:"https://www.worldquant.com/career-listing/",           s:"none"},
+  {id:6, n:"Citadel",                    c:"hm", t:"hf", a:"$63B+",  w:"Multi-strat powerhouse. Your cross-asset trading ops across FI, EQ, FX and commodities is exactly their remit.",         url:"https://www.citadel.com/careers/",                     s:"none"},
+  {id:7, n:"Point72",                    c:"hm", t:"hf", a:"$35B+",  w:"Strong systematic and discretionary mix. NYC-based COO-level roles fit your profile well.",                              url:"https://www.point72.com/careers/",                     s:"none"},
+  {id:8, n:"Millennium Management",      c:"hm", t:"hf", a:"$70B+",  w:"One of the largest multi-strat funds. Your multi-asset, multi-office trading ops is directly relevant.",                  url:"https://www.mlp.com/careers.html",                    s:"none"},
+  {id:9, n:"Balyasny Asset Management",  c:"hm", t:"hf", a:"$20B+",  w:"Fast-growing multi-strat NYC HQ. Strong need for experienced trading infrastructure leadership at your level.",           url:"https://www.balyasny.com/careers",                     s:"none"},
+  {id:10,n:"ExodusPoint Capital",        c:"hm", t:"hf", a:"$12B+",  w:"NYC-based multi-strat in build-out phase. Your COO profile suits their scale-up trajectory well.",                       url:"https://www.exoduspoint.com/careers",                  s:"none"},
+  {id:11,n:"Marshall Wace",              c:"hm", t:"hf", a:"$64B+",  w:"~60% systematic via TOPS alpha capture. NYC at 66 Hudson Blvd. Your systematic e-trading expertise maps directly.",      url:"https://www.mwam.com/join-us/",                        s:"none"},
+  {id:12,n:"Capula Investment Management",c:"hm",t:"hf", a:"$30B+",  w:"Fixed income specialist — absolute return, macro, crisis alpha. NYC at 510 Madison. Deep fit for your rates and credit work.", url:"https://careers.capulaglobal.com/",              s:"none"},
+  {id:13,n:"Vanguard",                   c:"am", t:"am", a:"$9T+",   w:"Massive asset manager growing trading sophistication. Your systematic execution fills a key gap.",                        url:"https://www.vanguardjobs.com/",                        s:"none"},
+  {id:14,n:"Fidelity Investments",       c:"am", t:"am", a:"$4.5T+", w:"Active trading desk expansion. Your securities lending and e-trading fits their institutional build-out.",                url:"https://jobs.fidelity.com/",                           s:"none"},
+  {id:15,n:"State Street Global Advisors",c:"am",t:"am", a:"$4T+",   w:"Active in electronic trading and market structure reform. Direct overlap with your regulatory engagement.",               url:"https://careers.statestreet.com/",                     s:"none"},
+  {id:16,n:"Wellington Management",      c:"am", t:"am", a:"$1T+",   w:"Private, well-regarded. Growing systematic capabilities. Your cross-asset trading leadership is rare at this level.",    url:"https://www.wellington.com/en/careers",                s:"none"},
+  {id:17,n:"Nuveen / TIAA",              c:"am", t:"am", a:"$1.2T+", w:"Active trading desk modernisation underway. Fixed income and systematic experience is highly relevant.",                  url:"https://careers.tiaa.org/",                            s:"none"},
+  {id:18,n:"JPMorgan",                   c:"bk", t:"bk", a:"$3T+",   w:"Largest US bank. Your market structure regulatory experience (Fed, SEC) is a premium skill here.",                       url:"https://careers.jpmorgan.com/",                        s:"none"},
+  {id:19,n:"Goldman Sachs",              c:"bk", t:"bk", a:"$2.8T+", w:"GSAM and securities division need senior trading infrastructure leaders. Strong brand match.",                           url:"https://www.goldmansachs.com/careers/",                s:"none"},
+  {id:20,n:"Morgan Stanley",             c:"bk", t:"bk", a:"$1.5T+", w:"Institutional securities and e-trading build-out. Your cross-asset e-trading and market structure work aligns well.",    url:"https://www.morganstanley.com/people-opportunities/",  s:"none"},
+  {id:21,n:"Bank of America",            c:"bk", t:"bk", a:"$1T+",   w:"Active electronic trading expansion across FICC. Your systematic execution and market structure expertise is relevant.",  url:"https://careers.bankofamerica.com/",                   s:"none"},
+  {id:22,n:"Barclays",                   c:"bk", t:"bk", a:"$600B+", w:"Strong e-trading and market structure desk. NYC-based. Your regulatory engagement background is valuable here.",         url:"https://search.jobs.barclays/",                        s:"none"},
+  {id:23,n:"Citigroup",                  c:"bk", t:"bk", a:"$2.4T+", w:"Actively expanding electronic trading and algo execution across FICC and equities. Senior markets leadership fit.",      url:"https://jobs.citi.com/",                               s:"none"},
+  {id:24,n:"UBS",                        c:"bk", t:"bk", a:"$1.6T+", w:"Post-Credit Suisse integration creates real senior openings. Your operational scale and trading infrastructure experience is highly relevant.", url:"https://www.ubs.com/global/en/careers.html", s:"none"},
+  {id:25,n:"Wells Fargo",                c:"bk", t:"bk", a:"$600B+", w:"Growing institutional markets and e-trading capabilities. Your BlackRock pedigree would stand out strongly here.",       url:"https://www.wellsfargo.com/about/careers/",            s:"none"},
+  {id:26,n:"MarketAxess",                c:"ft", t:"ft", a:"N/A",    w:"Leading electronic fixed income trading platform. Your credit and rates e-trading expertise is a perfect match.",        url:"https://www.marketaxess.com/about/careers",            s:"none"},
+  {id:27,n:"Tradeweb",                   c:"ft", t:"ft", a:"N/A",    w:"Electronic rates and credit trading platform. Your systematic execution in Rates, Credit, EM is directly relevant.",     url:"https://www.tradeweb.com/careers/",                    s:"none"},
+  {id:28,n:"Virtu Financial",            c:"ft", t:"ft", a:"N/A",    w:"Market maker and e-trading firm. Your systematic execution and market structure expertise matches their leadership needs.", url:"https://www.virtu.com/careers/",                      s:"none"},
+  {id:29,n:"Bloomberg",                  c:"ft", t:"ft", a:"N/A",    w:"Expanding trading infrastructure and analytics. Your market structure knowledge and regulatory experience are assets.",   url:"https://www.bloomberg.com/careers/",                   s:"none"},
+  {id:30,n:"ION Group",                  c:"ft", t:"ft", a:"N/A",    w:"Trading technology platform used across buy and sell side. COO-level leadership need across global offices.",            url:"https://iongroup.com/careers/",                        s:"none"},
+];
+
+const headhunters = [
+  {id:1, n:"Spencer Stuart",              tier:1, sp:"Premier C-suite executive search. Dominant in asset management and hedge fund leadership placements.",             site:"https://www.spencerstuart.com/contact-us",        li:"https://www.linkedin.com/company/spencer-stuart/",              w:"Most prestigious for COO/MD roles at major asset managers and hedge funds. A relationship here is high value.", s:"none"},
+  {id:2, n:"Korn Ferry",                  tier:1, sp:"Largest global executive search firm. Strong financial services and capital markets practice.",                    site:"https://www.kornferry.com/contact",               li:"https://www.linkedin.com/company/korn-ferry/",                  w:"Broad reach across banks, asset managers and fintech. Good for COO and Head of Trading mandates.", s:"none"},
+  {id:3, n:"Russell Reynolds Associates", tier:1, sp:"Top-tier search with strong capital markets and fintech coverage.",                                               site:"https://www.russellreynolds.com/en/contact",      li:"https://www.linkedin.com/company/russell-reynolds-associates/", w:"Known for senior trading and operations leadership placements at hedge funds and global banks.", s:"none"},
+  {id:4, n:"Heidrick & Struggles",        tier:1, sp:"Global executive search with deep financial services practice.",                                                  site:"https://www.heidrick.com/en/contact-us",          li:"https://www.linkedin.com/company/heidrick-struggles/",          w:"Strong in asset management COO and CTO mandates. Worth engaging early in your search.", s:"none"},
+  {id:5, n:"Options Group",               tier:2, sp:"Specialist in capital markets and trading roles across buy and sell side.",                                       site:"https://www.optionsgroup.com/contact/",           li:"https://www.linkedin.com/company/options-group/",               w:"Highly specialised in trading, systematic execution and market structure leadership roles.", s:"none"},
+  {id:6, n:"Caldwell",                    tier:2, sp:"Executive search with strong alternative investments and hedge fund practice.",                                   site:"https://www.caldwell.com/contact/",               li:"https://www.linkedin.com/company/caldwell-partners/",           w:"Active in hedge fund COO and operational leadership searches. Good Tier 2 relationship to build.", s:"none"},
+  {id:7, n:"Selby Jennings",              tier:2, sp:"Specialist financial services recruitment with quant and systematic trading focus.",                              site:"https://www.selbyjennings.com/contact-us",        li:"https://www.linkedin.com/company/selby-jennings/",              w:"Strong in systematic trading and quant finance placements. Useful for hedge fund and fintech roles.", s:"none"},
+  {id:8, n:"Macrae",                      tier:2, sp:"Boutique executive search focused exclusively on investment management.",                                         site:"https://www.macrae.com/contact/",                li:"https://www.linkedin.com/company/macrae-search/",               w:"Specialised boutique in investment management leadership. Good complement to the larger Tier 1 firms.", s:"none"},
+];
+
+let opps = [
+  {id:1, title:"Chief Operating Officer",         company:"Mid-size systematic hedge fund",  salary:"$500k–$800k + carry", firmType:"hf", stage:"saved",       source:"Network",          score:null, notes:"", steps:[]},
+  {id:2, title:"Head of Trading & Execution",     company:"Global asset manager",            salary:"$400k–$600k",         firmType:"am", stage:"saved",       source:"LinkedIn",         score:null, notes:"", steps:[]},
+  {id:3, title:"Chief Trading Officer",           company:"Multi-strategy hedge fund",       salary:"$600k–$1M+",          firmType:"hf", stage:"applied",     source:"Headhunter",       score:null, notes:"", steps:[]},
+  {id:4, title:"Managing Director, Market Structure",company:"Global investment bank",        salary:"$450k–$700k",         firmType:"bk", stage:"applied",     source:"Network",          score:null, notes:"", steps:[]},
+  {id:5, title:"Co-founder / COO",                company:"Systematic trading startup",      salary:"Equity + salary",     firmType:"ft", stage:"applied",     source:"AngelList",        score:null, notes:"", steps:[]},
+  {id:6, title:"President & COO",                 company:"Growth-stage fintech",            salary:"$500k + equity",      firmType:"ft", stage:"interviewing", source:"Headhunter",      score:null, notes:"", steps:[]},
+  {id:7, title:"Head of Electronic Trading",      company:"Tier-1 investment bank",          salary:"$550k–$750k",         firmType:"bk", stage:"interviewing", source:"Referral",        score:null, notes:"", steps:[]},
+  {id:8, title:"COO, Markets Division",           company:"Regional asset manager",          salary:"$350k–$500k",         firmType:"am", stage:"saved",       source:"eFinancialCareers", score:null, notes:"", steps:[]},
+];
+
+let firmFilter = "all", firmSearch = "";
+let oppSearch = "", oppType = "all";
+let expandedOpp = null;
+let apiKey = "";
+
+// ── API KEY ───────────────────────────────────────────────────────────────────
+function saveKey() {
+  apiKey = document.getElementById("api-key").value.trim();
+  document.getElementById("key-status").textContent = apiKey ? "✓ Key saved" : "";
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+function showPage(name, el) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+  document.getElementById("page-"+name).classList.add("active");
+  if (el) el.classList.add("active");
+}
+
+// ── OPPORTUNITIES ─────────────────────────────────────────────────────────────
+function filterOpps(v) { oppSearch = v.toLowerCase(); renderOpps(); }
+function filterOppType(v) { oppType = v; renderOpps(); }
+
+function addOppPrompt() {
+  const title = prompt("Role title:");
+  if (!title) return;
+  const company = prompt("Company:");
+  if (!company) return;
+  opps.push({ id: Date.now(), title, company, salary:"TBC", firmType:"hf", stage:"saved", source:"Manual", score:null, notes:"", steps:[] });
+  renderOpps();
+}
+
+function matchPill(m) {
+  if (m==="h") return `<span class="match-pill match-h">high match</span>`;
+  if (m==="m") return `<span class="match-pill match-m">medium match</span>`;
+  return `<span class="match-pill match-l">low match</span>`;
+}
+function scoreBar(score) {
+  if (score===null) return `<button class="btn btn-primary" style="font-size:10px;padding:3px 8px" onclick="scoreOpp(${arguments[1]},event)">Score with AI</button>`;
+  const c = score>=80?"var(--green)":score>=60?"var(--amber)":"var(--coral)";
+  return `<div class="score-row"><div class="score-bar-bg"><div class="score-bar-fill" style="width:${score}%;background:${c}"></div></div><span class="score-num" style="color:${c}">${score}%</span></div>`;
+}
+
+function renderOpps() {
+  const filtered = opps.filter(o => {
+    const sm = oppSearch===""||o.title.toLowerCase().includes(oppSearch)||o.company.toLowerCase().includes(oppSearch);
+    const tm = oppType==="all"||o.firmType===oppType;
+    return sm && tm;
+  });
+  const cols = { saved:[], applied:[], interviewing:[] };
+  let applied=0, intvw=0, scores=[];
+  filtered.forEach(o => {
+    if (o.stage==="applied") applied++;
+    if (o.stage==="interviewing") intvw++;
+    if (o.score!==null) scores.push(o.score);
+    const isExp = expandedOpp===o.id;
+    const stepsHtml = o.steps.map((s,i) =>
+      `<div class="step-item${s.done?" done":""}"><input type="checkbox" ${s.done?"checked":""} onchange="toggleStep(${o.id},${i},this.checked)"><span>${s.text}</span></div>`
+    ).join("");
+    const expandedHtml = isExp ? `
+      <div class="notes-panel open">
+        <textarea placeholder="Notes, contacts, follow-ups..." onblur="saveNote(${o.id},this.value)">${o.notes}</textarea>
+        <div style="margin-top:8px">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">Next steps</div>
+          ${stepsHtml}
+          <div style="display:flex;gap:6px;margin-top:5px">
+            <input type="text" id="step-${o.id}" placeholder="Add a next step..." style="flex:1;font-size:12px;padding:4px 8px" onkeydown="if(event.key==='Enter')addStep(${o.id})">
+            <button class="btn" onclick="addStep(${o.id})">Add</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="window.open('https://claude.ai/new?q='+encodeURIComponent('Give me 8 tailored interview prep questions for the ${o.title} role, based on my BlackRock MD COO background in global trading and systematic execution.'),'_blank')">Interview prep ↗</button>
+          <button class="btn" onclick="window.open('https://claude.ai/new?q='+encodeURIComponent('Draft a tailored executive cover letter for the ${o.title} role at ${o.company}, drawing on my BlackRock MD COO experience leading a 220-person global trading team and systematic execution.'),'_blank')">Cover letter ↗</button>
+          <button class="btn" onclick="cycleOppStage(${o.id})">Move stage →</button>
+        </div>
+      </div>` : "";
+    const card = `<div class="opp-card ${o.stage}" id="opp-${o.id}">
+      <div class="opp-title" onclick="toggleOpp(${o.id})" style="cursor:pointer">${o.title} ${isExp?"▲":"▼"}</div>
+      <div class="opp-co">${o.company} · ${o.source}</div>
+      <div class="opp-tags"><span class="tag tag-${o.firmType}">${TAG_LABELS[o.firmType]||o.firmType}</span></div>
+      <div class="opp-bot"><span class="opp-salary">${o.salary}</span></div>
+      ${scoreBar(o.score, o.id)}
+      ${expandedHtml}
+    </div>`;
+    cols[o.stage].push(card);
+  });
+
+  const total = filtered.length;
+  const avgScore = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : null;
+  document.getElementById("os-total").textContent = total;
+  document.getElementById("os-score").textContent = avgScore!==null ? avgScore+"%" : "—";
+  document.getElementById("os-applied").textContent = applied;
+  document.getElementById("os-int").textContent = intvw;
+  document.getElementById("nb-opp").textContent = total;
+
+  ["saved","applied","interviewing"].forEach(stage => {
+    const key = stage==="interviewing"?"int":stage;
+    document.getElementById("col-"+stage).innerHTML = cols[stage].join("")||"";
+    document.getElementById("pc-"+key).textContent = cols[stage].length;
+  });
+}
+
+function toggleOpp(id) { expandedOpp = expandedOpp===id ? null : id; renderOpps(); }
+function saveNote(id, val) { const o=opps.find(x=>x.id===id); if(o) o.notes=val; }
+function addStep(id) {
+  const inp = document.getElementById("step-"+id);
+  if (!inp||!inp.value.trim()) return;
+  const o = opps.find(x=>x.id===id);
+  if (!o) return;
+  o.steps.push({text:inp.value.trim(), done:false});
+  renderOpps();
+  setTimeout(()=>{ const el=document.getElementById("step-"+id); if(el) el.focus(); },50);
+}
+function toggleStep(id, idx, done) {
+  const o = opps.find(x=>x.id===id);
+  if (o) { o.steps[idx].done=done; renderOpps(); }
+}
+function cycleOppStage(id) {
+  const o = opps.find(x=>x.id===id);
+  if (!o) return;
+  o.stage = o.stage==="saved"?"applied":o.stage==="applied"?"interviewing":"saved";
+  renderOpps();
+}
+
+async function scoreOpp(id, e) {
+  if (e) e.stopPropagation();
+  if (!apiKey) { alert("Add your Anthropic API key on the Job Scanner page to use AI scoring."); return; }
+  const o = opps.find(x=>x.id===id);
+  if (!o) return;
+  const btn = e ? e.target : null;
+  if (btn) btn.innerHTML = '<span class="spinner"></span>Scoring...';
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01"},
+      body: JSON.stringify({
+        model:"claude-sonnet-4-20250514", max_tokens:200,
+        messages:[{role:"user",content:`Score this job fit 0-100. Reply ONLY with JSON {"score":85,"reason":"one sentence"}. No markdown.
+
+Candidate: ${RESUME}
+Job: ${o.title} at ${o.company}. ${TAG_LABELS[o.firmType]||o.firmType}. Salary: ${o.salary}.`}]
+      })
+    });
+    const data = await res.json();
+    const txt = data.content.map(c=>c.text||"").join("").replace(/```json|```/g,"").trim();
+    const parsed = JSON.parse(txt);
+    o.score = Math.min(100, Math.max(0, Math.round(parsed.score)));
+    o.scoreReason = parsed.reason||"";
+  } catch(err) { console.error(err); }
+  renderOpps();
+}
+
+// ── FIRMS ─────────────────────────────────────────────────────────────────────
+function filterFirms(v) { firmSearch=v.toLowerCase(); renderFirms(); }
+function filterFirmCat(v) { firmFilter=v; renderFirms(); }
+
+function toggleFirm(id) {
+  const f=firms.find(x=>x.id===id);
+  if(!f)return;
+  f.s=f.s==="none"?"watching":f.s==="watching"?"applied":"none";
+  renderFirms();
+}
+
+function fStatusLabel(s) {
+  if(s==="watching") return `<span class="status-pill" style="color:var(--green)"><span class="sdot" style="background:var(--green)"></span>Watching</span>`;
+  if(s==="applied")  return `<span class="status-pill" style="color:var(--blue)"><span class="sdot" style="background:var(--blue)"></span>Applied</span>`;
+  return `<span class="status-pill" style="color:var(--text3)">Not tracking</span>`;
+}
+
+function renderFirms() {
+  const fl = firms.filter(f=>{
+    return (firmFilter==="all"||f.c===firmFilter) &&
+           (firmSearch===""||f.n.toLowerCase().includes(firmSearch)||f.w.toLowerCase().includes(firmSearch));
+  });
+  let w=0,a=0;
+  firms.forEach(f=>{if(f.s==="watching")w++;if(f.s==="applied")a++;});
+  document.getElementById("fs-n").textContent=fl.length;
+  document.getElementById("fs-w").textContent=w;
+  document.getElementById("fs-a").textContent=a;
+  document.getElementById("nb-firms").textContent=fl.length;
+
+  const byCat={};CAT_ORDER.forEach(c=>byCat[c]=[]);
+  fl.forEach(f=>{if(byCat[f.c])byCat[f.c].push(f);});
+  let html="";
+  CAT_ORDER.forEach(cat=>{
+    const list=byCat[cat]; if(!list.length)return;
+    const m=CAT_META[cat];
+    html+=`<div class="sec-head"><span class="sec-dot" style="background:${m.c}"></span>${m.l}<span class="sec-count">${list.length}</span></div><div class="grid">`;
+    list.forEach(f=>{
+      const lq=encodeURIComponent(f.n+' COO OR "Head of Trading" OR "Managing Director"');
+      html+=`<div class="card ${f.s!=="none"?f.s:""}">
+        <div class="card-top"><div><div class="card-name">${f.n}</div><div class="card-sub">${f.a} AUM</div></div><span class="tag tag-${f.t}">${TAG_LABELS[f.t]||f.t}</span></div>
+        <div class="card-why">${f.w}</div>
+        <div class="card-actions">
+          <a class="btn" href="${f.url}" target="_blank">Careers ↗</a>
+          <a class="btn" href="https://www.linkedin.com/jobs/search/?keywords=${lq}&location=New+York&f_E=6&sortBy=DD" target="_blank">LinkedIn ↗</a>
+          <button class="btn btn-primary" onclick="openClaude('Search job boards and the careers page at ${f.n} for current senior COO, Head of Trading or MD-level roles. Match against: BlackRock MD COO, 220-person global trading team, systematic execution, market structure, rates and credit.')">AI scan ↗</button>
+          <button class="btn" onclick="toggleFirm(${f.id})">${fStatusLabel(f.s)}</button>
+        </div>
+      </div>`;
+    });
+    html+=`</div>`;
+  });
+  if(!html)html='<p class="empty">No firms match.</p>';
+  document.getElementById("firm-list").innerHTML=html;
+}
+
+// ── HEADHUNTERS ───────────────────────────────────────────────────────────────
+function toggleHH(id) {
+  const h=headhunters.find(x=>x.id===id);
+  if(!h)return;
+  h.s=h.s==="none"?"contacted":h.s==="contacted"?"dialogue":"none";
+  renderHH();
+}
+function hhStatusLabel(s) {
+  if(s==="contacted") return `<span class="status-pill" style="color:var(--amber)"><span class="sdot" style="background:var(--amber)"></span>Contacted</span>`;
+  if(s==="dialogue")  return `<span class="status-pill" style="color:var(--green)"><span class="sdot" style="background:var(--green)"></span>In dialogue</span>`;
+  return `<span class="status-pill" style="color:var(--text3)">Not contacted</span>`;
+}
+function renderHH() {
+  let c=0,d=0;
+  headhunters.forEach(h=>{if(h.s==="contacted")c++;if(h.s==="dialogue")d++;});
+  document.getElementById("hs-c").textContent=c;
+  document.getElementById("hs-d").textContent=d;
+  [1,2].forEach(t=>{
+    document.getElementById("hh-t"+t).innerHTML=headhunters.filter(h=>h.tier===t).map(h=>`
+      <div class="card ${h.s==="contacted"?"contacted":h.s==="dialogue"?"dialogue":""}">
+        <div class="card-top"><div><div class="card-name">${h.n}</div><div class="card-sub">${h.sp}</div></div><span class="tag ${t===1?"tag-t1":"tag-t2"}">${t===1?"Tier 1":"Tier 2"}</span></div>
+        <div class="card-why">${h.w}</div>
+        <div class="card-actions">
+          <a class="btn" href="${h.site}" target="_blank">Website ↗</a>
+          <a class="btn" href="${h.li}" target="_blank">LinkedIn ↗</a>
+          <button class="btn btn-primary" onclick="openClaude('Draft a short compelling outreach message to a senior partner at ${h.n} introducing myself as Gavin Sweeney, BlackRock MD COO of Global Trading with 20 years experience leading a 220-person global trading team across Fixed Income, Equity, FX, Commodities and systematic execution. I am exploring COO or Head of Trading opportunities at hedge funds, asset managers or fintech firms in NYC or remote.')">Draft outreach ↗</button>
+          <button class="btn" onclick="toggleHH(${h.id})">${hhStatusLabel(h.s)}</button>
+        </div>
+      </div>`).join("");
+  });
+}
+
+// ── SCANNER ───────────────────────────────────────────────────────────────────
+async function runScan(src) {
+  if (!apiKey) { alert("Add your Anthropic API key above to enable AI scans."); return; }
+  const el=document.getElementById("sr-"+src);
+  const ls=document.getElementById("ls-"+src);
+  if(!el)return;
+  el.innerHTML=`<span class="spinner"></span>Scanning...`;
+  try{
+    const r=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:600,tools:[{type:"web_search_20250305",name:"web_search"}],messages:[{role:"user",content:SCAN_QUERIES[src]||SCAN_QUERIES.all}]})
+    });
+    const d=await r.json();
+    const t=d.content.filter(c=>c.type==="text").map(c=>c.text).join("\n").trim();
+    el.innerHTML=t||"No results found — try again.";
+    if(ls)ls.textContent="Scanned at "+new Date().toLocaleTimeString();
+  }catch(e){el.innerHTML="Scan failed. Check your API key and try again.";}
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function openClaude(q) {
+  window.open("https://claude.ai/new?q="+encodeURIComponent(q), "_blank");
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+renderOpps();
+renderFirms();
+renderHH();
+</script>
+</body>
+</html>
