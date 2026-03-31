@@ -1,0 +1,15 @@
+# Gavin's Job Scanner — Python dependencies
+# All standard library except these:
+
+# No third-party packages needed!
+# The scanner uses only Python's built-in libraries:
+#   - urllib.request  (HTTP fetching)
+#   - smtplib         (sending email)
+#   - json            (storing seen roles)
+#   - hashlib         (deduplication)
+#   - re              (text parsing)
+#   - datetime, time, os
+
+# If you want to extend the scanner later with better HTML parsing, add:
+# beautifulsoup4==4.12.3
+# requests==2.31.0

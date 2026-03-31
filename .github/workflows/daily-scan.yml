@@ -1,0 +1,43 @@
+name: Daily Job Scanner
+
+on:
+  # Run every weekday morning at 7am New York time (12:00 UTC)
+  schedule:
+    - cron: '0 12 * * 1-5'
+
+  # Also allow manual trigger from the GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          # Need write access so we can commit the updated seen_roles.json
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run job scanner
+        env:
+          EMAIL_FROM:     ${{ secrets.EMAIL_FROM }}
+          EMAIL_TO:       ${{ secrets.EMAIL_TO }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          SMTP_HOST:      smtp.gmail.com
+          SMTP_PORT:      587
+        run: python scanner.py
+
+      - name: Commit updated seen_roles.json
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add seen_roles.json
+          # Only commit if there's actually a change
+          git diff --staged --quiet || git commit -m "chore: update seen roles [skip ci]"
+          git push
